@@ -68,5 +68,6 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: di
     elif tokenres == "invaild":
         await voice_cmd.finish('合成失败！请联系Bot所有者填写语音合成密钥！')
         return
+    text = str(regex_dict["text"]).encode("utf-8").decode("unicode_escape")
     await voice_cmd.finish(MessageSegment.record(
-        f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={regex_dict["text"]}&token={config.token}'))
+        f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={text}&token={config.token}'))
