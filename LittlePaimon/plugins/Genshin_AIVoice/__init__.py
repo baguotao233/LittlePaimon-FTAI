@@ -9,6 +9,7 @@ from LittlePaimon.utils.tool import freq_limiter
 from LittlePaimon.utils.filter import filter_msg
 from LittlePaimon.manager.plugin_manager import plugin_manager as pm
 import requests
+from io import BytesIO
 from .config import config
 
 __plugin_meta__ = PluginMetadata(
@@ -69,5 +70,7 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: di
         await voice_cmd.finish('合成失败！请联系Bot所有者填写语音合成密钥！')
         return
     text = str(regex_dict["text"])
-    await voice_cmd.finish(MessageSegment.record(
-        f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={text}&token={config.token}'))
+    bio = BytesIO()
+    req = requests.get(f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={text}&token={config.token}').content
+    bio.write(req)
+    await voice_cmd.finish(MessageSegment.record())
