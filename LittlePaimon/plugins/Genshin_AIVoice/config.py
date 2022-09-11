@@ -9,7 +9,7 @@ class AIConfig:
             data = load_yaml(AI_CONFIG)
         else:
             data = {}
-        self.token: str = data.get('密钥', '请在 https://www.yuque.com/launchpad/kwmwcs/masia7 处申请')
+        self.token: str = str(data.get('密钥', '请在 https://www.yuque.com/launchpad/kwmwcs/masia7 处申请'))
 
 
 config = AIConfig()
