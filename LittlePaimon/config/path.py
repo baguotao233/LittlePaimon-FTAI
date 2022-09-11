@@ -49,6 +49,8 @@ PAIMON_CONFIG = Path() / 'config' / 'paimon_config.yml'
 # 问候语配置文件
 GREET_CONFIG = Path() / 'config' / 'paimon_greet.yml'
 GREET_CONFIG_DEFAULT = Path() / 'config' / 'paimon_greet_default.yml'
+# 方糖AI开放平台配置文件
+AI_CONFIG = Path() / 'config' / 'paimon_ai.yml'
 # 群聊学习配置文件
 LEARNING_CHAT_CONFIG = Path() / 'config' / 'learning_chat.yml'
 
