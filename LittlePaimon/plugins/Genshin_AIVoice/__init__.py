@@ -8,23 +8,21 @@ from nonebot.typing import T_State
 from LittlePaimon.utils.tool import freq_limiter
 from LittlePaimon.utils.filter import filter_msg
 from LittlePaimon.manager.plugin_manager import plugin_manager as pm
+import requests
+from .config import config
 
 __plugin_meta__ = PluginMetadata(
     name='原神语音合成',
     description='原神语音合成',
     usage='...',
     extra={
-        'author':   '惜月',
+        'author':   '惜月 / 方糖AI开放平台',
         'version':  '3.0',
         'priority': 8,
     }
 )
 
-SUPPORTS_CHARA = ['派蒙', '凯亚', '安柏', '丽莎', '琴', '香菱', '枫原万叶', '迪卢克', '温迪', '可莉', '早柚', '托马', '芭芭拉',
-                  '优菈', '云堇', '钟离', '魈', '凝光', '雷电将军', '北斗', '甘雨', '七七', '刻晴', '神里绫华', '戴因斯雷布', '雷泽',
-                  '神里绫人', '罗莎莉亚', '阿贝多', '八重神子', '宵宫', '荒泷一斗', '九条裟罗', '夜兰', '珊瑚宫心海', '五郎', '散兵',
-                  '女士', '达达利亚', '莫娜', '班尼特', '申鹤', '行秋', '烟绯', '久岐忍', '辛焱', '砂糖', '胡桃', '重云', '菲谢尔',
-                  '诺艾尔', '迪奥娜', '鹿野院平藏']
+SUPPORTS_CHARA = ['派蒙']
 
 CHARA_RE = '|'.join(SUPPORTS_CHARA)
 
@@ -46,6 +44,13 @@ voice_cmd = on_regex(rf'^(?P<chara>({CHARA_RE})?)说(?P<text>[\w，。！？、�
                          'pm_priority':    10
                      }, rule=Rule(is_paimon))
 
+async def token_parser(text):
+    if text == "Missing Token":
+        return "missing"
+    elif text == "Invaild Token":
+        return "invaild"
+    elif text == "Passed":
+        return "pass"
 
 @voice_cmd.handle()
 async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: dict = RegexDict()):
@@ -56,5 +61,12 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: di
             f'原神语音合成冷却中...剩余{freq_limiter.left(f"genshin_ai_voice_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}")}秒')
     freq_limiter.start(f'genshin_ai_voice_{event.group_id if isinstance(event, GroupMessageEvent) else event.user_id}',
                        pm.config.AI_voice_cooldown)
+    tokenres = await token_parser(requests.get("https://openai-api-vits-paimon.rdpstudio.top/checktoken?token=" + config.token).text)
+    if tokenres == "missing":
+        await voice_cmd.finish('合成失败！请联系Bot所有者填写语音合成密钥！')
+        return
+    elif tokenres == "invaild":
+        await voice_cmd.finish('合成失败！请联系Bot所有者填写语音合成密钥！')
+        return
     await voice_cmd.finish(MessageSegment.record(
-        f'http://233366.proxy.nscc-gz.cn:8888/?text={regex_dict["text"]}&speaker={regex_dict["chara"]}'))
+        f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={regex_dict["text"]}&token={config.token}'))
