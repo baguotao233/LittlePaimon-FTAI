@@ -73,4 +73,4 @@ async def _(event: Union[GroupMessageEvent, PrivateMessageEvent], regex_dict: di
     bio = BytesIO()
     req = requests.get(f'https://openai-api-vits-paimon.rdpstudio.top/generate?text={text}&token={config.token}').content
     bio.write(req)
-    await voice_cmd.finish(MessageSegment.record())
+    await voice_cmd.finish(MessageSegment.record(bio))
