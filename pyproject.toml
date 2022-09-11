@@ -31,6 +31,7 @@ ujson = "^5.4.0"
 expandvars = "^0.9.0"
 pywebio = "^1.6.2"
 jieba = "^0.42.1"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 nb-cli = "^0.6.7"
