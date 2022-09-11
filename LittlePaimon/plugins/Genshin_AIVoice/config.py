@@ -10,7 +10,6 @@ class AIConfig:
         else:
             data = {}
         self.token: str = data.get('密钥', '请在 https://www.yuque.com/launchpad/kwmwcs/masia7 处申请')
-        self.save()
 
 
 config = AIConfig()
