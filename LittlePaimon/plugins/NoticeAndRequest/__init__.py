@@ -7,9 +7,10 @@ from nonebot import on_command, on_regex, on_notice, on_request
 from nonebot.rule import Rule
 from nonebot.permission import SUPERUSER
 from nonebot.params import CommandArg, ArgPlainText, RegexDict
-from nonebot.adapters.onebot.v11 import Bot, Message, MessageEvent, PrivateMessageEvent, FriendRequestEvent, GroupRequestEvent, \
+from nonebot.adapters.onebot.v11 import Bot, Message, MessageEvent, PrivateMessageEvent, FriendRequestEvent, \
+    GroupRequestEvent, \
     RequestEvent, NoticeEvent, \
-    GroupIncreaseNoticeEvent, FriendAddNoticeEvent
+    GroupIncreaseNoticeEvent, FriendAddNoticeEvent, GroupMessageEvent
 from nonebot.typing import T_State
 
 from LittlePaimon import NICKNAME, SUPERUSERS
@@ -41,7 +42,7 @@ async def IncreaseRule(event: NoticeEvent) -> bool:
     if isinstance(event, FriendAddNoticeEvent):
         return f'new_friend_{event.user_id}' not in done.keys()
     elif isinstance(event, GroupIncreaseNoticeEvent):
-        return f'new_group_{event.group_id}' not in done.keys() and f'new_member_{event.group_id}_{event.user_id}' not in done.keys()
+        return f'new_group_{event.group_id}' not in done.keys() and f'new_member_{event.group_id}_{event.user_id}' not in done.keys() and '全部' not in config.group_ban
     return False
 
 
@@ -148,8 +149,8 @@ async def _(bot: Bot, event: GroupIncreaseNoticeEvent):
         done[f'new_group_{event.group_id}'] = datetime.datetime.now()
         await asyncio.sleep(random.randint(10, 20))
         await bot.send_group_msg(group_id=event.group_id, message=format_message(config.new_group))
-    elif str(event.group_id) not in config.group_ban and config.group_ban[0] != '全部':
-        done[f'new_member_{event.user_id}'] = datetime.datetime.now()
+    elif str(event.group_id) not in config.group_ban:
+        done[f'new_member_{event.group_id}_{event.user_id}'] = datetime.datetime.now()
         await asyncio.sleep(random.randint(10, 20))
         if str(event.group_id) in config.group_greet:
             msg = config.group_greet[str(event.group_id)]
@@ -174,21 +175,24 @@ async def _(event: MessageEvent, msg: Message = CommandArg()):
         target = ['全部']
     else:
         try:
-            target = list(map(int, target))
+            target = list(map(int, target.split(' ')))
         except Exception:
-            await ban_greet.finish('请发送正确的要关闭入群欢迎的群号或者"全部"')
+            await ban_greet.finish(f'请发送正确的要{"启用" if type else "禁用"}入群欢迎的群号或者"全部"')
     if not target:
-        target = [event.group_id]
+        if isinstance(event, GroupMessageEvent):
+            target = [event.group_id]
+        else:
+            await ban_greet.finish(f'请发送正确的要{"启用" if type else "禁用"}入群欢迎的群号或者"全部"')
     for t in target:
         if t == '全部':
-            config.group_ban = ['全部'] if type else []
+            config.group_ban = [] if type else ['全部']
         elif not type:
             if t not in config.group_ban:
                 config.group_ban.append(t)
         elif t in config.group_ban:
             config.group_ban.remove(t)
     config.save()
-    await ban_greet.finish(f'已{"启用" if type else "禁用"}群{" ".join(target)}的群欢迎')
+    await ban_greet.finish(f'已{"启用" if type else "禁用"}群{" ".join(map(str, target))}的群欢迎')
 
 
 @scheduler.scheduled_job('cron', hour='*/1')
